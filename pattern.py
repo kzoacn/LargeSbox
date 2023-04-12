@@ -1,7 +1,8 @@
 import math
+import random
 from tqdm import tqdm
 n=128
-d=2**32+1
+d=2**16+1
 power_of_two=[2**i for i in range(0,n)]
 power_of_two_with_zero=[0]+power_of_two
 

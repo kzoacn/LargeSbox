@@ -1,24 +1,77 @@
+#include <cmath>
 #include<iostream>
 #include<algorithm>
 #include<vector>
 #include<set>
 #include<map> 
-#include "bitbasis.hpp"
-#include "quad.hpp"
+#include "bitbasis.hpp" 
 using namespace std;
 
+#define RAIN
+//#define AIM
 
-//N-8 for test
-//N=128 for two round Rain-128
-//N=192 for AIM-192
-#define N 128
+#ifdef RAIN
+
+    #define N 128
+
+    #if N==128
+        #define LOGD 16
+    #elif N==192
+        #define LOGD 16
+    #elif N==256
+        #define LOGD 16
+    #endif
+
+    #define FREE_VARS (2*LOGD)
+    #define QUAD_VARS (FREE_VARS+FREE_VARS*(FREE_VARS-1)/2)
+#elif
+
+#endif
+
 
 const int n=N;
 int logd;
-
 vector<int> irr_poly;
 
-vector<int>linear_2_to_t;
+
+void set_parameters(){
+    irr_poly.resize(n+1);
+    logd=LOGD;
+
+#if N==128
+    irr_poly[n]=1;
+    irr_poly[7]=1;
+    irr_poly[2]=1;
+    irr_poly[1]=1;
+    irr_poly[0]=1;
+ 
+
+#elif N==192
+
+    irr_poly[n]=1;
+    irr_poly[7]=1;
+    irr_poly[2]=1;
+    irr_poly[1]=1;
+    irr_poly[0]=1;
+ 
+#elif N==256
+    irr_poly[n]=1;
+    irr_poly[10]=1;
+    irr_poly[5]=1;
+    irr_poly[2]=1;
+    irr_poly[0]=1;
+     
+#else
+    //n=2,4
+    irr_poly[n]=1;
+    irr_poly[1]=1;
+    irr_poly[0]=1;
+    puts("not used");
+#endif
+
+}
+
+
 
 struct Term{
     int var1,var2;
@@ -306,52 +359,9 @@ Poly combine(const vector<Poly> &power,int t1,int t2){
     return multiply(power[t1],power[t2]);
 }
 
-void set_parameters(){
-    irr_poly.resize(n+1);
-
-#if N==128
-    irr_poly[n]=1;
-    irr_poly[7]=1;
-    irr_poly[2]=1;
-    irr_poly[1]=1;
-    irr_poly[0]=1;
-
- 
-    logd=32;
-    linear_2_to_t.push_back(64);
- 
-
-#elif N==192
-
-    irr_poly[n]=1;
-    irr_poly[7]=1;
-    irr_poly[2]=1;
-    irr_poly[1]=1;
-    irr_poly[0]=1;
-
-#elif N==8
-    irr_poly[n]=1;
-    irr_poly[4]=1;
-    irr_poly[3]=1;
-    irr_poly[1]=1;
-    irr_poly[0]=1;
-    
-    d=5;
-    logd=2;
-    linear_2_to_t.push_back(4);
-
-#else
-    //n=2,4
-    irr_poly[n]=1;
-    irr_poly[1]=1;
-    irr_poly[0]=1;
-    puts("not used");
-#endif
-
-}
 
 
-void generate_free_vars(){
+void generate(){
     //assume x^d=1
     Poly x;
     Poly power_of_x[n]; 
@@ -363,15 +373,13 @@ void generate_free_vars(){
     }
     auto tx=x;
     for(int i=0;i<n;i++){ 
-        cerr<<"calc x^2^"<<i<<endl;
         power_of_x[i]=tx; 
-        tx=square(tx);//x^2
+        tx=square(tx);
     }
-
 
     vector<Expression> equations;
 
-    for(auto t : linear_2_to_t){
+    for(auto t : {2*logd}){
         //x^(2^t)+x=0 , t is a power of two
         auto equation=add(power_of_x[t],x);
 
@@ -386,7 +394,7 @@ void generate_free_vars(){
         eq.print();
     
     BitBasis<n> basis;
-    
+    //Finding free variables O(n^3)
     for(auto eq : equations){
         bitset<n>bs;
         for(auto term : eq.terms){
@@ -405,7 +413,7 @@ void generate_free_vars(){
     for(auto var : free_vars){
         cout<<"free var: "<<name(var)<<endl;
     }
-    vector<Expression> repr_x;// represent basic vars as linear combination of free vars
+    vector<Expression> repr_x;// represent basic vars as linear combination of free vars O(n^2)
     repr_x.resize(n);
     for(int i=0;i<n;i++){
         if(basis.bs[i][i]){
@@ -425,7 +433,6 @@ void generate_free_vars(){
         r.print();
     }
 
-    cout<<"### find quadratic equations ###"<<endl;
 
 
     vector<Poly> power_of_repr_x;
@@ -433,79 +440,78 @@ void generate_free_vars(){
 
     tx=repr_x;
     for(int i=0;i<n;i++){ 
-        cerr<<"calc x^2^"<<i<<" which is represented by free vars"<<endl;
+        //cerr<<"calc x^2^"<<i<<" which is represented by free vars"<<endl;
         power_of_repr_x[i]=tx; 
         tx=square(tx);
     }
 
 
+    cout<<"### finding quadratic equations ###"<<endl;
     auto mat = rand_mat(); 
     auto r = multiply_matrix(repr_x,mat); 
 
     equations.clear();
 
-    auto rx=multiply(r,repr_x); 
-    auto r2x_r=add(multiply(square(r),repr_x),r); 
-    auto rx2_x=add(multiply(r,square(repr_x)),repr_x); 
+    auto repr_x_c=repr_x;
+    for(int i=0;i<n;i++)
+        repr_x_c[i].constant=rand()%2;
 
-    auto xd=multiply(power_of_repr_x[logd],power_of_repr_x[0]);
+    auto rx=multiply(r,repr_x_c); 
+    auto r2x_r=add(multiply(square(r),repr_x_c),r); 
+    auto rx2_x=add(multiply(r,square(repr_x_c)),repr_x_c); 
 
-    for(auto equation : {rx,r2x_r,rx2_x,xd}){
-        for(auto eq: equation){
-            eq.simplify();
-            equations.push_back(eq);
-        }
+    auto xd=multiply(power_of_repr_x[logd],repr_x);
+    auto linear_mul_x=add(multiply(power_of_repr_x[2*logd],repr_x)
+                ,multiply(power_of_repr_x[0],repr_x));
+
+
+    //Finding inear independent quadratic equations 
+    //Solving final quadratic equations costs O(quad_vars^3)
+    BitBasis<QUAD_VARS> basis2;
+    
+    map<pair<int,int>,int>mapping;
+    int quad_vars=0;
+    for(auto v1 : free_vars)
+    for(auto v2 : free_vars){
+        if(v1<=v2)
+            mapping[make_pair(v1,v2)]=quad_vars++;
     }
 
 
-    for(int i=0;i<quad_len;i++){
-        cerr<<i<<" "<<quad_len<<endl;
-        vector<Expression> term1,term2;
-        term1=combine(power_of_repr_x,quad_eq[i][0],quad_eq[i][1]);
-        term2=combine(power_of_repr_x,quad_eq[i][2],quad_eq[i][3]);
-        auto equation = add(term1,term2);
-
+    for(auto equation : {rx,r2x_r,rx2_x,xd,linear_mul_x}){
         for(auto eq: equation){ 
             equations.push_back(eq);
         }
     }
 
-
-    BitBasis<n*n> basis2;
-    
-    //for(auto eq : equations){
-    //    eq.print();
-    //}
-
-    map<pair<int,int>,int>mapping;
-    int idx=0;
-    for(auto v1 : free_vars)
-    for(auto v2 : free_vars){
-        if(v1<=v2)
-            mapping[make_pair(v1,v2)]=idx++;
+    for(auto eq : equations){
+        eq.print();
     }
-    for(int i=0;i<equations.size();i++){
-        auto eq = equations[i];
-        bitset<n*n>bs;
+
+    for(auto eq : equations){
+        bitset<QUAD_VARS>bs;
         for(auto term : eq.terms){
             bs[mapping[make_pair(term.var1,term.var2)]]=1;
         }
-        if(basis2.insert(bs)){
-            cerr<<"inserted "<<i/n<<endl;
-        }
+        basis2.insert(bs);
     }
-
+ 
+    cout<<"Field : GF(2^"<<n<<")"<<endl;
     cout<<"Guess : x^(2^"<<logd<<"+1)"<<endl;
     cout<<"number of free variable : "<<n-rank<<endl;
-    cout<<"number of quadratic variables : "<<idx<<endl;
+    cout<<"number of quadratic variables : "<<quad_vars<<endl;
     cout<<"number of linear independent quadratic equations : "<<basis2.rank()<<endl;
+    if(basis2.rank() >= quad_vars)
+        cout<<"Complexity : 2^"<<(n-logd+3*(log2(max(n,quad_vars))-log2(n)))<<endl;
+    else
+        cout<<"Unsolvable"<<endl;
 }
 
 
 int main(){
     srand(123);
     set_parameters();
-    generate_free_vars();
+    generate();
 
     return 0;
 }

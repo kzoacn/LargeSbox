@@ -1,6 +1,6 @@
 # LargeSbox
 
-#Compile and Run
+# Compile and Run
 
 ```
 g++ main.cpp -o main -O2

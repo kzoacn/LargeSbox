@@ -1,8 +1,8 @@
 import math
 import random
 from tqdm import tqdm
-n=128
-d=2**16+1
+n=192
+d=45
 power_of_two=[2**i for i in range(0,n)]
 power_of_two_with_zero=[0]+power_of_two
 
@@ -40,7 +40,8 @@ def find_quadratic(n,d):
 
 
 print(find_linear(n,d))
-lst=find_quadratic(n,d)
+#lst=find_quadratic(n,d)
+lst=[]
 text=""
 for x in lst:
     text+=f"{{{x[0]},{x[1]},{x[2]},{x[3]}}},"

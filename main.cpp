@@ -7,7 +7,7 @@
 #include "bitbasis.hpp" 
 using namespace std;
 
-#define RAIN
+#define RAIN 
 //#define AIM
 
 #ifdef RAIN
@@ -22,21 +22,26 @@ using namespace std;
         #define LOGD 16
     #endif
 
+    #define T (2*LOGD)
     #define FREE_VARS (2*LOGD)
     #define QUAD_VARS (FREE_VARS+FREE_VARS*(FREE_VARS-1)/2)
-#elif
+#endif
 
+#ifdef AIM
+    #define N 192
+    #define D 45
+    #define T 12
+    #define FREE_VARS 12
+    #define QUAD_VARS (FREE_VARS+FREE_VARS*(FREE_VARS-1)/2)
 #endif
 
 
-const int n=N;
-int logd;
+const int n=N; 
 vector<int> irr_poly;
 
 
 void set_parameters(){
-    irr_poly.resize(n+1);
-    logd=LOGD;
+    irr_poly.resize(n+1); 
 
 #if N==128
     irr_poly[n]=1;
@@ -379,8 +384,8 @@ void generate(){
 
     vector<Expression> equations;
 
-    for(auto t : {2*logd}){
-        //x^(2^t)+x=0 , t is a power of two
+    for(auto t : {T}){
+        //x^(2^t)+x=0 
         auto equation=add(power_of_x[t],x);
 
         for(auto eq: equation){
@@ -456,16 +461,35 @@ void generate(){
     for(int i=0;i<n;i++)
         repr_x_c[i].constant=rand()%2;
 
+    vector<Poly> equations_over_GF2n;
+
+#ifdef RAIN
     auto rx=multiply(r,repr_x_c); 
     auto r2x_r=add(multiply(square(r),repr_x_c),r); 
     auto rx2_x=add(multiply(r,square(repr_x_c)),repr_x_c); 
-
-    auto xd=multiply(power_of_repr_x[logd],repr_x);
-    auto linear_mul_x=add(multiply(power_of_repr_x[2*logd],repr_x)
+    auto xd=multiply(power_of_repr_x[LOGD],repr_x);
+    auto linear_mul_x=add(multiply(power_of_repr_x[T],repr_x)
                 ,multiply(power_of_repr_x[0],repr_x));
 
+    equations_over_GF2n.push_back(rx);
+    equations_over_GF2n.push_back(r2x_r);
+    equations_over_GF2n.push_back(rx2_x);
+    equations_over_GF2n.push_back(xd);
+    equations_over_GF2n.push_back(linear_mul_x);
+#endif
+#ifdef AIM
+    auto rx=multiply(r,repr_x_c);  
+    auto xd=add(repr_x,repr_x);
+    auto linear_mul_x=add(multiply(power_of_repr_x[T],repr_x)
+                ,multiply(power_of_repr_x[0],repr_x));
+    equations_over_GF2n.push_back(rx);
+    equations_over_GF2n.push_back(xd);
+    equations_over_GF2n.push_back(linear_mul_x);
+#endif
 
-    //Finding inear independent quadratic equations 
+
+
+    //Finding l
     //Solving final quadratic equations costs O(quad_vars^3)
     BitBasis<QUAD_VARS> basis2;
     
@@ -478,7 +502,7 @@ void generate(){
     }
 
 
-    for(auto equation : {rx,r2x_r,rx2_x,xd,linear_mul_x}){
+    for(auto equation : equations_over_GF2n){
         for(auto eq: equation){ 
             equations.push_back(eq);
         }
@@ -497,12 +521,22 @@ void generate(){
     }
  
     cout<<"Field : GF(2^"<<n<<")"<<endl;
-    cout<<"Guess : x^(2^"<<logd<<"+1)"<<endl;
+#ifdef RAIN
+    cout<<"Guess : x^(2^"<<LOGD<<"+1)"<<endl;
+#endif
+#ifdef AIM
+    cout<<"Guess : x^45"<<endl;
+#endif 
     cout<<"number of free variable : "<<n-rank<<endl;
     cout<<"number of quadratic variables : "<<quad_vars<<endl;
     cout<<"number of linear independent quadratic equations : "<<basis2.rank()<<endl;
     if(basis2.rank() >= quad_vars)
-        cout<<"Complexity : 2^"<<(n-logd+3*(log2(max(n,quad_vars))-log2(n)))<<endl;
+#ifdef RAIN
+        cout<<"Complexity : 2^"<<(n-LOGD+3*(log2(max(n,quad_vars))-log2(n)))<<endl;
+#endif
+#ifdef AIM
+    cout<<"Complexity : 2^"<<(n-log2(D)+3*(log2(max(n,quad_vars))-log2(n)))<<endl;
+#endif 
     else
         cout<<"Unsolvable"<<endl;
 }

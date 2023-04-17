@@ -20,6 +20,8 @@ using namespace std;
         #define LOGD 16
     #elif N==256
         #define LOGD 16
+    #elif N==8
+        #define LOGD 2
     #endif
 
     #define T (2*LOGD)
@@ -66,12 +68,12 @@ void set_parameters(){
     irr_poly[2]=1;
     irr_poly[0]=1;
      
-#else
-    //n=2,4
+#elif N==8
     irr_poly[n]=1;
+    irr_poly[4]=1;
+    irr_poly[3]=1;
     irr_poly[1]=1;
     irr_poly[0]=1;
-    puts("not used");
 #endif
 
 }
@@ -365,8 +367,86 @@ Poly combine(const vector<Poly> &power,int t1,int t2){
 }
 
 
+Poly pow(Poly x,int t,int c){
+    //d=2^t+c, c=-1,0,1
+    //x^d
+    Poly res;
+    res.resize(n);
+    for(int i=0;i<n;i++)
+        res[i]=Expression();
+    res[0].constant=1;
+    if(c==-1){
+        for(int i=0;i<t;i++){
+            res=multiply(res,x);
+            x=square(x);
+        }
+        return res;
+    }
+    auto tx=x;
+    for(int i=0;i<t;i++)
+        tx=square(tx);
+    res=tx;
+    if(c==1)
+        res=multiply(res,x);
+
+    return res;
+}
+void verify_linear(){
+    //assume x^d=g^d=\alpha
+ #ifdef RAIN
+    Poly g,alpha;
+    g.resize(n);
+    for(int i=0;i<n;i++)
+        g[i]=Expression();
+    g[0].constant=1;
+    g[1].constant=1;
+
+    srand(time(0));
+    for(int i=0;i<n;i++)
+        g[i].constant=rand()%2;
+
+    alpha=pow(g,LOGD,1); 
+    
+    auto as=pow(alpha,LOGD,-1);
+
+    Poly x;
+    Poly power_of_x[n]; 
+
+    x.resize(n);
+    for(int i=0;i<n;i++){
+        x[i]=Expression(Term(i,i));
+    }
+    //x^{2^2lg}=x^{(2^lg+1)*(2^lg-1)}x
+    //x^{2^2lg}=a^{(2^lg-1)}x
+
+    auto x2d=pow(x,2*LOGD,0);
+    auto asx=multiply(as,x);
+    auto equation = add(x2d,asx);
+    
+        
+    BitBasis<n> basis; 
+
+    for(auto eq: equation){  
+        bitset<n>bs;
+        for(auto term : eq.terms){
+            bs[term.var1]=1;
+        }
+        basis.insert(bs);
+    } 
+
+    if(n-basis.rank()!=2*LOGD){
+        puts("NO!");
+        for(int i=0;i<n;i++)
+            cout<<g[i].constant<<" ";
+        cout<<endl;
+        exit(0);
+    }
+#endif
+    return ;
+}
 
 void generate(){
+
     //assume x^d=1
     Poly x;
     Poly power_of_x[n]; 
@@ -374,7 +454,6 @@ void generate(){
     x.resize(n);
     for(int i=0;i<n;i++){
         x[i]=Expression(Term(i,i));
-        //assume constant=0
     }
     auto tx=x;
     for(int i=0;i<n;i++){ 
@@ -545,6 +624,10 @@ void generate(){
 int main(){
     srand(123);
     set_parameters();
+    //for(int i=0;i<100;i++){
+    //    cout<<"checking "<<i<<endl;
+    //    verify_linear();
+    //}
     generate();
 
     return 0;

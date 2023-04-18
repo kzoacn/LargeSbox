@@ -445,6 +445,24 @@ void verify_linear(){
     return ;
 }
 
+void count(){
+    Poly x,y;
+
+    x.resize(n);
+    y.resize(n);
+    for(int i=0;i<n;i++){
+        x[i]=Expression(Term(i,i));
+        y[i]=Expression(Term(n+i,n+i));
+    }
+    auto xy=multiply(x,y);
+    int ans=0;
+    for(auto eq: xy){
+        ans+=eq.terms.size();
+    }
+    cout<<ans<<" "<<n*n<<endl;
+    return ;
+}
+
 void generate(){
 
     //assume x^d=1
@@ -626,8 +644,8 @@ int main(){
     set_parameters();
     //for(int i=0;i<100;i++){
     //    cout<<"checking "<<i<<endl;
-    //    verify_linear();
     //}
+    //count();
     generate();
 
     return 0;

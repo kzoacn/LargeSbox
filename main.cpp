@@ -7,8 +7,8 @@
 #include "bitbasis.hpp" 
 using namespace std;
 
-#define RAIN 
-//#define AIM
+//#define RAIN 
+#define AIM
 
 #ifdef RAIN
 
@@ -31,6 +31,7 @@ using namespace std;
 
 #ifdef AIM
     #define N 192
+    #define ESTAR 7
     #define D 45
     #define T 12
     #define FREE_VARS 12
@@ -575,13 +576,8 @@ void generate(){
     equations_over_GF2n.push_back(linear_mul_x);
 #endif
 #ifdef AIM
-    auto rx=multiply(r,repr_x_c);  
-    auto xd=add(repr_x,repr_x);
-    auto linear_mul_x=add(multiply(power_of_repr_x[T],repr_x)
-                ,multiply(power_of_repr_x[0],repr_x));
-    equations_over_GF2n.push_back(rx);
-    equations_over_GF2n.push_back(xd);
-    equations_over_GF2n.push_back(linear_mul_x);
+    auto rx=add(multiply(r,repr_x_c),pow(r,ESTAR,0));
+    equations_over_GF2n.push_back(rx);  
 #endif
 
 

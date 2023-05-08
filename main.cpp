@@ -12,10 +12,10 @@ using namespace std;
 
 #ifdef RAIN
 
-    #define N 128
+    #define N 8
 
     #if N==128
-        #define LOGD 16
+        #define LOGD 8
     #elif N==192
         #define LOGD 16
     #elif N==256
@@ -505,6 +505,14 @@ void generate(){
         }
         basis.insert(bs);
     }
+    //print basis
+    /*for(int i=0;i<n;i++){
+        for(int j=0;j<n;j++){
+            cout<<basis.bs[i][j];
+        }
+        cout<<endl;
+    }*/
+
     auto basic_vars=basis.basic_vars();
     auto free_vars=basis.free_vars();
     int rank=basis.rank();
@@ -518,11 +526,11 @@ void generate(){
     }
     vector<Expression> repr_x;// represent basic vars as linear combination of free vars O(n^2)
     repr_x.resize(n);
-    for(int i=0;i<n;i++){
+    for(int i=n-1;i>=0;i--){
         if(basis.bs[i][i]){
-            for(int j=0;j<n;j++){
-                if(basis.bs[i][j]&&!basis.bs[j][j]){
-                    repr_x[i]=repr_x[i]+Expression(Term(j));
+            for(int j=i+1;j<n;j++){
+                if(basis.bs[i][j]){
+                    repr_x[i]=repr_x[i]+repr_x[j];
                 }
             }
         }else{
@@ -551,13 +559,39 @@ void generate(){
 
     cout<<"### finding quadratic equations ###"<<endl;
     auto mat = rand_mat(); 
-    auto r = multiply_matrix(repr_x,mat); 
+
+    //output mat
+    cout<<"M: "<<endl;
+    for(int i=0;i<n;i++){
+        for(int j=0;j<n;j++){
+            cout<<mat[i][j];
+        }
+        cout<<endl;
+    }
+    Poly b,c;
+    b.resize(n);
+    c.resize(n);
+    for(int i=0;i<n;i++)
+        b[i].constant=rand()%2;
+    for(int i=0;i<n;i++)
+        c[i].constant=rand()%2;
+
+    cout<<"b: "<<endl;
+    for(int i=0;i<n;i++){
+        cout<<b[i].constant;
+    }
+    cout<<endl;
+    cout<<"c: "<<endl;
+    for(int i=0;i<n;i++){
+        cout<<c[i].constant;
+    }
+    cout<<endl;
+
+    auto r = add(multiply_matrix(repr_x,mat),b); 
 
     equations.clear();
 
-    auto repr_x_c=repr_x;
-    for(int i=0;i<n;i++)
-        repr_x_c[i].constant=rand()%2;
+    auto repr_x_c=add(repr_x,c);
 
     vector<Poly> equations_over_GF2n;
 
@@ -571,9 +605,12 @@ void generate(){
 
     equations_over_GF2n.push_back(rx);
     equations_over_GF2n.push_back(r2x_r);
+#if N!=8
     equations_over_GF2n.push_back(rx2_x);
     equations_over_GF2n.push_back(xd);
     equations_over_GF2n.push_back(linear_mul_x);
+#endif
+
 #endif
 #ifdef AIM
     auto rx=add(multiply(r,repr_x_c),pow(r,ESTAR,0));

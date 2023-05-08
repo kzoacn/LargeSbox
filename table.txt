@@ -1,10 +1,9 @@
 Field : GF(2^128)
-Guess : x^(2^16+1)
-number of free variable : 32
-number of quadratic variables : 528
-number of linear independent quadratic equations : 528
-Complexity : 2^118.133
-
+Guess : x^(2^8+1)
+number of free variable : 16
+number of quadratic variables : 136
+number of linear independent quadratic equations : 136
+Complexity : 2^120.262
 
 
 number of free variable : 32

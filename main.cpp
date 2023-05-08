@@ -7,8 +7,8 @@
 #include "bitbasis.hpp" 
 using namespace std;
 
-//#define RAIN 
-#define AIM
+#define RAIN 
+//#define AIM
 
 #ifdef RAIN
 

@@ -12,7 +12,7 @@ using namespace std;
 
 #ifdef RAIN
 
-    #define N 8
+    #define N 128
 
     #if N==128
         #define LOGD 8
@@ -21,7 +21,7 @@ using namespace std;
     #elif N==256
         #define LOGD 16
     #elif N==8
-        #define LOGD 2
+        #define LOGD 2 
     #endif
 
     #define T (2*LOGD)
@@ -74,7 +74,8 @@ void set_parameters(){
     irr_poly[4]=1;
     irr_poly[3]=1;
     irr_poly[1]=1;
-    irr_poly[0]=1;
+    irr_poly[0]=1; 
+
 #endif
 
 }
@@ -479,6 +480,9 @@ void generate(){
         power_of_x[i]=tx; 
         tx=square(tx);
     }
+    
+    //for(auto e : power_of_x[1])
+    //    e.print();
 
     vector<Expression> equations;
 
@@ -561,13 +565,13 @@ void generate(){
     auto mat = rand_mat(); 
 
     //output mat
-    cout<<"M: "<<endl;
+    /*cout<<"M: "<<endl;
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
             cout<<mat[i][j];
         }
         cout<<endl;
-    }
+    }*/
     Poly b,c;
     b.resize(n);
     c.resize(n);
@@ -576,7 +580,7 @@ void generate(){
     for(int i=0;i<n;i++)
         c[i].constant=rand()%2;
 
-    cout<<"b: "<<endl;
+    /*cout<<"b: "<<endl;
     for(int i=0;i<n;i++){
         cout<<b[i].constant;
     }
@@ -585,7 +589,7 @@ void generate(){
     for(int i=0;i<n;i++){
         cout<<c[i].constant;
     }
-    cout<<endl;
+    cout<<endl;*/
 
     auto r = add(multiply_matrix(repr_x,mat),b); 
 
@@ -603,13 +607,11 @@ void generate(){
     auto linear_mul_x=add(multiply(power_of_repr_x[T],repr_x)
                 ,multiply(power_of_repr_x[0],repr_x));
 
-    equations_over_GF2n.push_back(rx);
+    equations_over_GF2n.push_back(rx); 
     equations_over_GF2n.push_back(r2x_r);
-#if N!=8
     equations_over_GF2n.push_back(rx2_x);
     equations_over_GF2n.push_back(xd);
-    equations_over_GF2n.push_back(linear_mul_x);
-#endif
+    equations_over_GF2n.push_back(linear_mul_x); 
 
 #endif
 #ifdef AIM

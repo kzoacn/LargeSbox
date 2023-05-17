@@ -34,6 +34,7 @@ using namespace std;
     #define ESTAR 7
     #define D 45
     #define T 12
+
     #define FREE_VARS 12
     #define QUAD_VARS (FREE_VARS+FREE_VARS*(FREE_VARS-1)/2)
 #endif
@@ -467,9 +468,24 @@ void count(){
 
 void generate(){
 
-    //assume x^d=1
+    //assume x^d=alpha=a^d
     Poly x;
     Poly power_of_x[n]; 
+
+    Poly a,alpha;
+    a.resize(n);
+
+#ifdef RAIN
+    for(int i=0;i<n;i++)
+        a[i].constant=rand()%2;
+    alpha = pow(a,LOGD,1);
+#endif
+
+#ifdef AIM
+    a[0].constant=1;
+    alpha.resize(n);
+    alpha[0].constant=1;
+#endif
 
     x.resize(n);
     for(int i=0;i<n;i++){
@@ -487,8 +503,15 @@ void generate(){
     vector<Expression> equations;
 
     for(auto t : {T}){
+#ifdef RAIN
+        //x^(2^t)+alpha^{2LOD-1} x=0 
+        auto equation=add(power_of_x[t],multiply(pow(alpha,2*LOGD,-1),x));
+#endif 
+
+#ifdef AIM
         //x^(2^t)+x=0 
         auto equation=add(power_of_x[t],x);
+#endif 
 
         for(auto eq: equation){
             eq.simplify();
@@ -603,15 +626,15 @@ void generate(){
     auto rx=multiply(r,repr_x_c); 
     auto r2x_r=add(multiply(square(r),repr_x_c),r); 
     auto rx2_x=add(multiply(r,square(repr_x_c)),repr_x_c); 
-    auto xd=multiply(power_of_repr_x[LOGD],repr_x);
-    auto linear_mul_x=add(multiply(power_of_repr_x[T],repr_x)
-                ,multiply(power_of_repr_x[0],repr_x));
+    //auto xd=multiply(power_of_repr_x[LOGD],repr_x);
+    //auto linear_mul_x=add(multiply(power_of_repr_x[T],repr_x)
+    //            ,multiply(power_of_repr_x[0],repr_x));
 
     equations_over_GF2n.push_back(rx); 
     equations_over_GF2n.push_back(r2x_r);
     equations_over_GF2n.push_back(rx2_x);
-    equations_over_GF2n.push_back(xd);
-    equations_over_GF2n.push_back(linear_mul_x); 
+    //equations_over_GF2n.push_back(xd);
+    //equations_over_GF2n.push_back(linear_mul_x); 
 
 #endif
 #ifdef AIM

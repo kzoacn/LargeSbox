@@ -58,15 +58,17 @@ for n in [8,128,192,256]:
             print("x^{2**%d-2} = (x^%d)^s * x^{2^%d} " % (n,d,t))
 
 print('Finding for AIM')
-for n in [192]:
-    h1=2**5-1
-    h2=2**29-1
+hs={}
+hs[128]=(2**3-1,2**27-1)
+hs[192]=(2**5-1,2**29-1)
+hs[256]=(2**3-1,2**53-1)
+
+for n in [128,192,256]:
+    h1,h2=hs[n]
     print("n=%d"%n)
-    print("h1=2**5-1")
-    print("h2=2**29-1")
     divisors=all_divisors(n)
     for d in divisors:
         t=find_aim(n,h1,h2,d)
         if t!=-1:
-            print("x^{2**5-1} = (x^%d)^s * x^{2^%d} " % (d,t))
-            print("x^{2**29-1} = (x^%d)^s * x^{2^%d} " % (d,t))
+            print("x^{2**%d-1} = (x^%d)^s * x^{2^%d} " % (math.log(h1+1,2),d,t))
+            print("x^{2**%d-1} = (x^%d)^s * x^{2^%d} " % (math.log(h2+1,2),d,t))
